@@ -1,0 +1,43 @@
+config:
+  target: 'http://localhost:3000'
+  environments:
+    slow:
+      target: 'http://localhost:3001'
+  http:
+    timeout: 30
+  phases:
+    - duration: 10
+      arrivalRate: 2
+      rampTo: 2
+      name: Warm up the API
+scenarios:
+  - flow:
+      - parallel:
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/large-response'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'
+          - get:
+              url: '/ping'

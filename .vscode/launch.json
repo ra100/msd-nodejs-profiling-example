@@ -1,0 +1,36 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Slow",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/index-slow.mts",
+      "outFiles": [
+        "${workspaceFolder}/**/*.mts"
+      ],
+      "runtimeArgs": ["--experimental-strip-types", "--watch"],
+      "runtimeVersion": "22"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Fast",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/index-fast.mts",
+      "outFiles": [
+        "${workspaceFolder}/**/*.mts"
+      ],
+      "runtimeArgs": ["--experimental-strip-types", "--watch"],
+      "runtimeVersion": "22"
+    }
+  ]
+}
