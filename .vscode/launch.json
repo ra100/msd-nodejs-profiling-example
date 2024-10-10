@@ -7,30 +7,16 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Slow",
+      "name": "Launch",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/index-slow.mts",
+      "program": "${workspaceFolder}/index.mts",
       "outFiles": [
         "${workspaceFolder}/**/*.mts"
       ],
       "runtimeArgs": ["--experimental-strip-types", "--watch"],
       "runtimeVersion": "22"
     },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Fast",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/index-fast.mts",
-      "outFiles": [
-        "${workspaceFolder}/**/*.mts"
-      ],
-      "runtimeArgs": ["--experimental-strip-types", "--watch"],
-      "runtimeVersion": "22"
-    }
   ]
 }

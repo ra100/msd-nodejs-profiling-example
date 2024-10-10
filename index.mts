@@ -1,0 +1,144 @@
+import fastify from 'fastify'
+import {Writable, Transform, Readable} from 'stream'
+import {setTimeout, setImmediate} from 'timers/promises'
+
+const DATA_LENGTH = 100_000
+const DATA_PROCESS_ITERATION = 100
+const CHUNK_SIZE = 1_000
+
+const app = fastify({logger: true})
+
+const doSomeCalculation = (value: number): number => {
+  let result = value
+  for (let i = 0; i < DATA_PROCESS_ITERATION; i++) {
+    value = Math.sqrt(value * Math.random())
+  }
+  return value
+}
+
+const getInitialArray = (): number[] =>
+  Array.from({length: DATA_LENGTH}, () => Math.random())
+
+const processDataSync = (): number[] => {
+  const array = getInitialArray()
+
+  const result = array.map(value => doSomeCalculation(value))
+
+  return result
+}
+
+const processDataAsync = async (): Promise<number[]> => {
+  const array = getInitialArray()
+
+  const result = await Promise.all(
+    array.map(value => Promise.resolve(doSomeCalculation(value)))
+  )
+
+  return result
+}
+
+const processDataImmediate = async (): Promise<number[]> => {
+  const array = getInitialArray()
+
+  const result: number[] = []
+  for (let index = 0; index < array.length; index++) {
+    const value = array[index]
+    result.push(doSomeCalculation(value))
+    if (index % CHUNK_SIZE === 0) {
+      await setImmediate()
+    }
+  }
+
+  return result
+}
+
+const calculationTransform = new Transform({
+  readableObjectMode: true,
+  writableObjectMode: true,
+  transform(chunk: number, _encoding, callback) {
+    const result = doSomeCalculation(chunk)
+    callback(null, result)
+  },
+})
+
+const processDataStream = (): Promise<number[]> => {
+  const array = getInitialArray()
+
+  const arrayStream = Readable.from(array)
+
+  const result: number[] = []
+
+  const writableStream = new Writable({
+    objectMode: true,
+    write(chunk, _encoding, callback) {
+      result.push(chunk)
+      callback()
+    },
+  })
+
+  arrayStream.pipe(calculationTransform).pipe(writableStream)
+
+  return new Promise((resolve, reject) => {
+    writableStream.on('finish', () => resolve(result))
+    writableStream.on('error', reject)
+  })
+}
+
+const processDataChunks = async (): Promise<number[]> => {
+  const array = getInitialArray()
+
+  const result: number[] = []
+  let chunk = array.splice(0, CHUNK_SIZE)
+  while (chunk.length > 0) {
+    const chunkResult = await Promise.resolve(
+      chunk.map(value => doSomeCalculation(value))
+    )
+    result.push(...chunkResult)
+    chunk = array.splice(0, CHUNK_SIZE)
+  }
+
+  return result
+}
+
+app.get('/process-data-sync', async () => {
+  const result = processDataSync()
+  return result
+})
+
+app.get('/process-data-async', async () => {
+  const result = await processDataAsync()
+  return result
+})
+
+app.get('/process-data-stream', async () => {
+  const result = processDataStream()
+  return result
+})
+
+app.get('/process-data-immediate', async () => {
+  const result = await processDataImmediate()
+  return result
+})
+
+app.get('/process-data-chunks', async () => {
+  const result = await processDataChunks()
+  return result
+})
+
+const getPongResponse = async () => {
+  await setTimeout(10)
+  return {pong: 'pong', rand: Math.random()}
+}
+
+app.get('/ping', async () => {
+  return getPongResponse()
+})
+
+// Start server
+app.listen({port: 3000}, (err, address) => {
+  if (err) {
+    app.log.error(err)
+    process.exit(1)
+  }
+  app.log.info(`Server listening at ${address}`)
+})

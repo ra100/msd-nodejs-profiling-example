@@ -1,17 +1,36 @@
 config:
   target: 'http://localhost:3000'
-  environments:
-    slow:
-      target: 'http://localhost:3001'
   http:
     timeout: 30
   phases:
     - duration: 10
-      arrivalRate: 2
-      rampTo: 2
+      arrivalRate: 5
+      rampTo: 5
       name: Warm up the API
+    - duration: 20
+      arrivalRate: 5
+      name: Sustained load
+  variables:
+    url: '/process-data-sync'
+  environments:
+    sync:
+      variables:
+        url: '/process-data-sync'
+    async:
+      variables:
+        url: '/process-data-async'
+    stream:
+      variables:
+        url: '/process-data-stream'
+    immediate:
+      variables:
+        url: '/process-data-immediate'
+    chunks:
+      variables:
+        url: '/process-data-chunks'
 scenarios:
-  - flow:
+  - name: Data Sync
+    flow:
       - parallel:
           - get:
               url: '/ping'
@@ -22,15 +41,7 @@ scenarios:
           - get:
               url: '/ping'
           - get:
-              url: '/ping'
-          - get:
-              url: '/ping'
-          - get:
-              url: '/large-response'
-          - get:
-              url: '/ping'
-          - get:
-              url: '/ping'
+              url: '{{ url }}'
           - get:
               url: '/ping'
           - get:
