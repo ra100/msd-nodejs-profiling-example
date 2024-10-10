@@ -3,7 +3,7 @@ import {Writable, Transform, Readable} from 'stream'
 import {setTimeout, setImmediate} from 'timers/promises'
 
 const DATA_LENGTH = 100_000
-const DATA_PROCESS_ITERATION = 100
+const DATA_PROCESS_ITERATION = 1_000
 const CHUNK_SIZE = 1_000
 
 const app = fastify({logger: true})
@@ -16,8 +16,7 @@ const doSomeCalculation = (value: number): number => {
   return value
 }
 
-const getInitialArray = (): number[] =>
-  Array.from({length: DATA_LENGTH}, () => Math.random())
+const getInitialArray = (): number[] => Array(DATA_LENGTH).fill(1)
 
 const processDataSync = (): number[] => {
   const array = getInitialArray()
@@ -52,19 +51,17 @@ const processDataImmediate = async (): Promise<number[]> => {
   return result
 }
 
-const calculationTransform = new Transform({
-  readableObjectMode: true,
-  writableObjectMode: true,
-  transform(chunk: number, _encoding, callback) {
-    const result = doSomeCalculation(chunk)
-    callback(null, result)
-  },
-})
-
 const processDataStream = (): Promise<number[]> => {
   const array = getInitialArray()
 
-  const arrayStream = Readable.from(array)
+  const calculationTransform = new Transform({
+    readableObjectMode: true,
+    writableObjectMode: true,
+    transform(chunk: number, _encoding, callback) {
+      const result = doSomeCalculation(chunk)
+      callback(null, result)
+    },
+  })
 
   const result: number[] = []
 
@@ -76,10 +73,12 @@ const processDataStream = (): Promise<number[]> => {
     },
   })
 
-  arrayStream.pipe(calculationTransform).pipe(writableStream)
+  Readable.from(array).pipe(calculationTransform).pipe(writableStream)
 
   return new Promise((resolve, reject) => {
-    writableStream.on('finish', () => resolve(result))
+    writableStream.on('finish', () => {
+      resolve(result)
+    })
     writableStream.on('error', reject)
   })
 }

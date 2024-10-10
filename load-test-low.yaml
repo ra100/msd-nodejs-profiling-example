@@ -3,11 +3,11 @@ config:
   http:
     timeout: 30
   phases:
-    - duration: 10
+    - duration: 5
       arrivalRate: 2
       rampTo: 2
       name: Warm up the API
-    - duration: 10
+    - duration: 5
       arrivalRate: 2
       name: Sustained load
   variables:
