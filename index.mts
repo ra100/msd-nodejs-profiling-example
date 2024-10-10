@@ -1,6 +1,8 @@
 import fastify from 'fastify'
 import {Writable, Transform, Readable} from 'stream'
 import {setTimeout, setImmediate} from 'timers/promises'
+import {Worker} from 'worker_threads'
+import os from 'os'
 
 const DATA_LENGTH = 100_000
 const DATA_PROCESS_ITERATION = 1_000
@@ -99,6 +101,43 @@ const processDataChunks = async (): Promise<number[]> => {
   return result
 }
 
+const workers: Worker[] = []
+let index = 0
+
+// create workers on demand and/or return existing worker
+const getWorker = (): Worker => {
+  if (workers.length === 0) {
+    const workerUrl = new URL('./worker.mts', import.meta.url)
+    for (let i = 0; i < os.cpus().length; i++) {
+      workers.push(new Worker(workerUrl))
+    }
+  }
+
+  return workers[index++ % workers.length]
+}
+
+const processDataInWorker = async () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const worker = getWorker()
+      const id = Date.now() + Math.random()
+
+      worker.postMessage({type: 'processData', data: getInitialArray(), id})
+
+      worker.on('message', event => {
+        if (event.type === 'syncResult' && event.id === id) {
+          resolve(event.data)
+        }
+      })
+      worker.on('error', error => {
+        reject(error)
+      })
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
 app.get('/process-data-sync', async () => {
   const result = processDataSync()
   return result
@@ -124,6 +163,11 @@ app.get('/process-data-chunks', async () => {
   return result
 })
 
+app.get('/process-data-worker', async () => {
+  const result = await processDataInWorker()
+  return result
+})
+
 const getPongResponse = async () => {
   await setTimeout(10)
   return {pong: 'pong', rand: Math.random()}
@@ -140,4 +184,9 @@ app.listen({port: 3000}, (err, address) => {
     process.exit(1)
   }
   app.log.info(`Server listening at ${address}`)
+  process.on('exit', () => {
+    if (workers.length > 0) {
+      workers.forEach(worker => worker.terminate())
+    }
+  })
 })

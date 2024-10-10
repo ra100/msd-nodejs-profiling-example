@@ -11,6 +11,7 @@ curl http://localhost:3000/process-data-async -o ./tmp/as.json
 curl http://localhost:3000/process-data-stream -o ./tmp/st.json
 curl http://localhost:3000/process-data-immediate -o ./tmp/i.json
 curl http://localhost:3000/process-data-chunks -o ./tmp/c.json
+curl http://localhost:3000/process-data-worker -o ./tmp/w.json
 ```
 
 ```bash
@@ -19,6 +20,7 @@ npx artillery run load-test.yaml --record --key $ARTILLERY_KEY -e async --name a
 npx artillery run load-test.yaml --record --key $ARTILLERY_KEY -e stream --name stream; sleep 1
 npx artillery run load-test.yaml --record --key $ARTILLERY_KEY -e immediate --name immediate; sleep 1
 npx artillery run load-test.yaml --record --key $ARTILLERY_KEY -e chunks --name chunks; sleep 1
+npx artillery run load-test.yaml --record --key $ARTILLERY_KEY -e worker --name worker; sleep 1
 ```
 
 ```bash
@@ -27,6 +29,7 @@ npx artillery run load-test-low.yaml --record --key $ARTILLERY_KEY -e async ; sl
 npx artillery run load-test-low.yaml --record --key $ARTILLERY_KEY -e stream ; sleep 1
 npx artillery run load-test-low.yaml --record --key $ARTILLERY_KEY -e immediate ; sleep 1
 npx artillery run load-test-low.yaml --record --key $ARTILLERY_KEY -e chunks ; sleep 1
+npx artillery run load-test-low.yaml --record --key $ARTILLERY_KEY -e worker ; sleep 1
 ```
 
 ```bash
@@ -35,4 +38,5 @@ npx artillery run load-test.yaml --output ./tmp/report-async.json -e async --nam
 npx artillery run load-test.yaml --output ./tmp/report-stream.json -e stream --name stream; npx artillery report ./tmp/report-stream.json ; sleep 10
 npx artillery run load-test.yaml --output ./tmp/report-immediate.json -e immediate --name immediate; npx artillery report ./tmp/report-immediate.json ; sleep 10
 npx artillery run load-test.yaml --output ./tmp/report-chunks.json -e chunks --name chunks; npx artillery report ./tmp/report-chunks.json ; sleep 10
+npx artillery run load-test.yaml --output ./tmp/report-worker.json -e worker --name worker; npx artillery report ./tmp/report-worker.json ; sleep 10
 ```

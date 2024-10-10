@@ -28,6 +28,9 @@ config:
     chunks:
       variables:
         url: '/process-data-chunks'
+    worker:
+      variables:
+        url: '/process-data-worker'
 scenarios:
   - name: Data Sync
     flow:
